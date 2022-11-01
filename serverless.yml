@@ -1,0 +1,52 @@
+service: user-authentication-backend
+frameworkVersion: '3'
+
+custom:
+  secrets: ${file(secret.json)}
+  serverless-offline:
+    httpPort: 4000
+    websocketPort: 4001
+    lambdaPort: 4002
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  environment:
+    DB_NAME: ${self:custom.secrets.DB_NAME}
+    DB_USER: ${self:custom.secrets.DB_USER}
+    DB_PASSWORD: ${self:custom.secrets.DB_PASSWORD}
+    DB_HOST: ${self:custom.secrets.DB_HOST}
+    DB_PORT: ${self:custom.secrets.DB_PORT}
+    JWT_SECRET_KEY: ${self:custom.secrets.JWT_SECRET_KEY}
+    
+functions:
+  hello:
+    handler: handler.hello
+    events:
+      - httpApi:
+          path: /
+          method: get
+  healthCheck:
+    handler: src/controller/dbController.healthCheck
+    events:
+      - http:
+          path: /health/db
+          method: get
+          cors: true
+  signup:
+    handler: src/controller/authController.signup
+    events:
+      - http:
+          path: /api/signup
+          method: post
+          cors: true
+  signin:
+    handler: src/controller/authController.signin
+    events:
+      - http:
+          path: /api/signin
+          method: post
+          cors: true
+
+plugins:
+  - serverless-offline
